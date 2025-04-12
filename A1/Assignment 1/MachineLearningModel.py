@@ -181,7 +181,10 @@ class KNNClassificationModel(MachineLearningModel):
         Returns:
         score (float): Evaluation score.
         """
-        #--- Write your code here ---#
+        result = []
+        for i in range(y_true):
+            result[i] = y_predicted == y_true
+        return float(sum(result))
         
     def euclidean_dist(self, x1, x2):
         return super().euclidean_dist(x1, x2)
