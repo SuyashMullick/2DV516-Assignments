@@ -81,7 +81,8 @@ class KNNRegressionModel(MachineLearningModel):
         Returns:
         None
         """
-        #--- Write your code here ---#
+        self.X_train = X
+        self.y_train = y
 
     def predict(self, X):
         """
@@ -95,6 +96,14 @@ class KNNRegressionModel(MachineLearningModel):
         predictions (array-like): Predicted values.
         """
         #--- Write your code here ---#
+        predictions = []
+        for x in X:
+            distances = [self.euclidean_dist(x, x_train) for x_train in self.X_train]
+            k_nearest_points = np.argsort(distances)[:self.k]
+            k_nearest_labels = [self.y_train[point] for point in k_nearest_points]
+            prediction = np.mean(k_nearest_labels)
+            predictions.append(prediction)
+        return predictions
 
     def evaluate(self, y_true, y_predicted):
         """
@@ -109,7 +118,7 @@ class KNNRegressionModel(MachineLearningModel):
         Returns:
         score (float): Evaluation score.
         """
-        #--- Write your code here ---#
+        return np.mean((y_true-y_predicted)**2)
         
     def euclidean_dist(self, x1, x2):
         return super().euclidean_dist(x1, x2)
@@ -167,6 +176,7 @@ class KNNClassificationModel(MachineLearningModel):
             k_nearest_labels = [self.y_train[point] for point in k_nearest_points]
             prediction = Counter(k_nearest_labels).most_common(1)[0][0]
             predictions.append(prediction)
+        return predictions
 
     def evaluate(self, y_true, y_predicted):
         """
@@ -181,10 +191,17 @@ class KNNClassificationModel(MachineLearningModel):
         Returns:
         score (float): Evaluation score.
         """
-        result = []
-        for i in range(y_true):
-            result[i] = y_predicted == y_true
-        return float(sum(result))
+        return float(np.sum(y_true==y_predicted))
         
     def euclidean_dist(self, x1, x2):
+        """
+        Calculates the euclidean distance between given points.
+        
+        Parameters:
+        x1 (array-like): Point 1.
+        x2 (array-like): Point 2.
+        
+        Returns:
+        distance (float): The euclidean distance between the points.
+        """
         return super().euclidean_dist(x1, x2)
