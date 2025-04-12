@@ -48,8 +48,8 @@ class MachineLearningModel(ABC):
         """
         pass
     
-    def euclidean_dist(self, x1, x2):
-        return np.sqrt(np.sum((x1-x2)**2))
+    def _euclidean_distance(self, x1, x2):
+        return np.sqrt(np.sum((x1-x2)**2, axis=1))
 
 class KNNRegressionModel(MachineLearningModel):
     """
@@ -81,8 +81,8 @@ class KNNRegressionModel(MachineLearningModel):
         Returns:
         None
         """
-        self.X_train = X
-        self.y_train = y
+        self.X_train = np.asarray(X)
+        self.y_train = np.asarray(y)
 
     def predict(self, X):
         """
@@ -98,12 +98,11 @@ class KNNRegressionModel(MachineLearningModel):
         #--- Write your code here ---#
         predictions = []
         for x in X:
-            distances = [self.euclidean_dist(x, x_train) for x_train in self.X_train]
+            distances = self._euclidean_distance(x, self.X_train)
             k_nearest_points = np.argsort(distances)[:self.k]
-            k_nearest_labels = [self.y_train[point] for point in k_nearest_points]
-            prediction = np.mean(k_nearest_labels)
-            predictions.append(prediction)
-        return predictions
+            predictions.append(np.mean(self.y_train[k_nearest_points]))
+        
+        return np.array(predictions)
 
     def evaluate(self, y_true, y_predicted):
         """
@@ -118,10 +117,10 @@ class KNNRegressionModel(MachineLearningModel):
         Returns:
         score (float): Evaluation score.
         """
-        return np.mean((y_true-y_predicted)**2)
+        return np.mean((y_true - y_predicted)**2)
         
-    def euclidean_dist(self, x1, x2):
-        return super().euclidean_dist(x1, x2)
+    def _euclidean_distance(self, x1, x2):
+        return super()._euclidean_distance(x1, x2)
 
 class KNNClassificationModel(MachineLearningModel):
     """
@@ -153,8 +152,8 @@ class KNNClassificationModel(MachineLearningModel):
         Returns:
         None
         """
-        self.X_train = X
-        self.y_train = y
+        self.X_train = np.asarray(X)
+        self.y_train = np.asarray(y)
 
     def predict(self, X):
         """
@@ -170,13 +169,12 @@ class KNNClassificationModel(MachineLearningModel):
         #--- Write your code here ---#
         predictions = []
         for x in X:
-            distances = [self.euclidean_dist(x, x_train) for x_train in self.X_train]
-            
+            distances = self._euclidean_distance(x, self.X_train)
             k_nearest_points = np.argsort(distances)[:self.k]
-            k_nearest_labels = [self.y_train[point] for point in k_nearest_points]
+            k_nearest_labels = self.y_train[k_nearest_points]
             prediction = Counter(k_nearest_labels).most_common(1)[0][0]
             predictions.append(prediction)
-        return predictions
+        return np.array(predictions)
 
     def evaluate(self, y_true, y_predicted):
         """
@@ -193,7 +191,7 @@ class KNNClassificationModel(MachineLearningModel):
         """
         return float(np.sum(y_true==y_predicted))
         
-    def euclidean_dist(self, x1, x2):
+    def _euclidean_distance(self, x1, x2):
         """
         Calculates the euclidean distance between given points.
         
@@ -204,4 +202,4 @@ class KNNClassificationModel(MachineLearningModel):
         Returns:
         distance (float): The euclidean distance between the points.
         """
-        return super().euclidean_dist(x1, x2)
+        return super()._euclidean_distance(x1, x2)
