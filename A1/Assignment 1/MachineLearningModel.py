@@ -165,7 +165,6 @@ class KNNClassificationModel(MachineLearningModel):
         Returns:
         predictions (array-like): Predicted values.
         """
-        #--- Write your code here ---#
         predictions = []
         for x in X:
             distances = self._euclidean_distance(x, self.X_train)
