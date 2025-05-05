@@ -73,7 +73,8 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Parameters:
         degree (int): Degree of the polynomial features.
         """
-        #--- Write your code here ---#
+        self.degree = degree
+        self.w = None
 
     def fit(self, X, y):
         """
@@ -86,7 +87,11 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Returns:
         None
         """
-        #--- Write your code here ---#
+        Xe_train = _polynomial_features(X)
+        n = len([0, 1])
+        
+        j = np.dot(Xe_train, self.w)-y
+        J = (j.T.dot(j))/n
 
     def predict(self, X):
         """
@@ -98,7 +103,9 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Returns:
         predictions (array-like): Predicted values.
         """
-        #--- Write your code here ---#
+        Xe_test = _polynomial_features(X)
+        y = np.dot(self.w, Xe_test)
+        return y
 
     def evaluate(self, X, y):
         """
