@@ -51,15 +51,17 @@ def _polynomial_features(self, X):
     """
         Generate polynomial features from the input features.
         Check the slides for hints on how to implement this one. 
-        This method is used by the regression models and must work
-        for any degree polynomial
+        This method is used by the regression models and works
+        for any degree polynomial. The returned value also contains
+        a column of 1's at the start to account for the bias term.
         Parameters:
         X (array-like): Features of the data.
 
         Returns:
-        X_poly (array-like): Polynomial features.
+        X_poly (array-like): Polynomial features (extended).
     """
-    
+    X_poly = np.c_([X**i for i in range (0, self.degree+1)])
+    return X_poly
 
 class RegressionModelNormalEquation(MachineLearningModel):
     """
@@ -74,7 +76,7 @@ class RegressionModelNormalEquation(MachineLearningModel):
         degree (int): Degree of the polynomial features.
         """
         self.degree = degree
-        self.w = None
+        self.beta = None
 
     def fit(self, X, y):
         """
@@ -87,11 +89,10 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Returns:
         None
         """
-        Xe_train = _polynomial_features(X)
-        n = len([0, 1])
+        Xe_train = self._polynomial_features(X)
+        y_train = y.flatten()
         
-        j = np.dot(Xe_train, self.w)-y
-        J = (j.T.dot(j))/n
+        self.beta = np.linalg.inv(Xe_train.T @ Xe_train) @ Xe_train.T @ y_train
 
     def predict(self, X):
         """
@@ -103,9 +104,9 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Returns:
         predictions (array-like): Predicted values.
         """
-        Xe_test = _polynomial_features(X)
-        y = np.dot(self.w, Xe_test)
-        return y
+        Xe_test = self._polynomial_features(X)
+        y_pred = Xe_test @ self.beta
+        return y_pred.flatten()
 
     def evaluate(self, X, y):
         """
@@ -118,7 +119,14 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Returns:
         score (float): Evaluation score (MSE).
         """
-        #--- Write your code here ---#
+        Xe_test = self._polynomial_features(X)
+        y_test = y.flatten()
+        
+        y_pred = Xe_test @ self.beta
+        
+        score = np.mean((y_test - y_pred)**2)
+        return score
+        
 
 class RegressionModelGradientDescent(MachineLearningModel):
     """
