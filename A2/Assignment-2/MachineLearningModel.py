@@ -75,8 +75,8 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Parameters:
         degree (int): Degree of the polynomial features.
         """
-        self.degree = degree
         self.beta = None
+        self.degree = degree
 
     def fit(self, X, y):
         """
@@ -142,7 +142,10 @@ class RegressionModelGradientDescent(MachineLearningModel):
         learning_rate (float): Learning rate for gradient descent.
         num_iterations (int): Number of iterations for gradient descent.
         """
-        #--- Write your code here ---#
+        self.beta = None
+        self.degree = degree
+        self.learning_rate = learning_rate
+        self.num_iterations = num_iterations
 
     def fit(self, X, y):
         """
@@ -155,7 +158,9 @@ class RegressionModelGradientDescent(MachineLearningModel):
         Returns:
         None
         """
-        #--- Write your code here ---#
+        Xe_train = self._polynomial_features(X)
+        y_train = y.flatten()
+        
 
     def predict(self, X):
         """
