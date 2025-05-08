@@ -89,10 +89,10 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Returns:
         None
         """
-        Xe_train = self._polynomial_features(X)
-        y_train = y.flatten()
+        Xe = self._polynomial_features(X)
+        y = y.flatten()
         
-        self.beta = np.linalg.inv(Xe_train.T @ Xe_train) @ Xe_train.T @ y_train
+        self.beta = np.linalg.inv(Xe.T @ Xe) @ Xe.T @ y
 
     def predict(self, X):
         """
@@ -104,9 +104,9 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Returns:
         predictions (array-like): Predicted values.
         """
-        Xe_test = self._polynomial_features(X)
-        y_pred = Xe_test @ self.beta
-        return y_pred.flatten()
+        Xe = self._polynomial_features(X)
+        predictions = Xe @ self.beta
+        return predictions.flatten()
 
     def evaluate(self, X, y):
         """
@@ -119,12 +119,10 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Returns:
         score (float): Evaluation score (MSE).
         """
-        Xe_test = self._polynomial_features(X)
-        y_test = y.flatten()
+        y = y.flatten()
+        y_pred = self.predict(X)
         
-        y_pred = Xe_test @ self.beta
-        
-        score = np.mean((y_test - y_pred)**2)
+        score = np.mean((y - y_pred)**2)
         return score
 
 class RegressionModelGradientDescent(MachineLearningModel):
@@ -157,14 +155,14 @@ class RegressionModelGradientDescent(MachineLearningModel):
         Returns:
         None
         """
-        Xe_train = self._polynomial_features(X)
-        y_train = y.flatten()
-        self.beta = np.zeros(Xe_train.shape[1])
-        n = Xe_train.shape[0]
+        Xe = self._polynomial_features(X)
+        y = y.flatten()
+        self.beta = np.zeros(Xe.shape[1])
+        n = Xe.shape[0]
         
         for j in range(0, self.num_iterations):
-            gradient = Xe_train.T @ (Xe_train @ self.beta - y_train)
-            self.beta = self.beta - 2 * self.learning_rate / n * gradient
+            gradient = -2 * Xe.T @ (Xe @ self.beta - y) / n
+            self.beta = self.beta - self.learning_rate * gradient
 
     def predict(self, X):
         """
@@ -176,9 +174,9 @@ class RegressionModelGradientDescent(MachineLearningModel):
         Returns:
         predictions (array-like): Predicted values.
         """
-        Xe_test = self._polynomial_features(X)
-        y_pred = Xe_test @ self.beta
-        return y_pred.flatten()
+        Xe = self._polynomial_features(X)
+        predictions = Xe @ self.beta
+        return predictions.flatten()
 
     def evaluate(self, X, y):
         """
@@ -191,12 +189,10 @@ class RegressionModelGradientDescent(MachineLearningModel):
         Returns:
         score (float): Evaluation score (MSE).
         """
-        Xe_test = self._polynomial_features(X)
-        y_test = y.flatten()
+        y = y.flatten()
+        y_pred = self.predict(X)
         
-        y_pred = Xe_test @ self.beta
-        
-        score = np.mean((y_test - y_pred)**2)
+        score = np.mean((y - y_pred)**2)
         return score
 
 class LogisticRegression:
@@ -212,7 +208,9 @@ class LogisticRegression:
         learning_rate (float): The learning rate for gradient descent.
         num_iterations (int): The number of iterations for gradient descent.
         """
-        #--- Write your code here ---#
+        self.beta = None
+        self.learning_rate = learning_rate
+        self.num_iterations = num_iterations
 
     def fit(self, X, y):
         """
@@ -225,7 +223,13 @@ class LogisticRegression:
         Returns:
         None
         """
-        #--- Write your code here ---#
+        y = y.flatten()
+        self.beta = np.zeros(X.shape[1])
+        n = X.shape[0]
+        
+        for j in range (0, self.num_iterations):
+            gradient = X.T @ (self._sigmoid(X @ self.beta) - y) / n
+            self.beta = self.beta - self.learning_rate * gradient
 
     def predict(self, X):
         """
@@ -237,7 +241,8 @@ class LogisticRegression:
         Returns:
         predictions (array-like): Predicted probabilities.
         """
-        #--- Write your code here ---#
+        predictions = self._sigmoid(X @ self.beta)
+        return predictions.flatten()
 
     def evaluate(self, X, y):
         """
@@ -250,7 +255,11 @@ class LogisticRegression:
         Returns:
         score (float): Evaluation score (e.g., accuracy).
         """
-        #--- Write your code here ---#
+        y = y.flatten()
+        y_pred = self.predict(X)
+        
+        score = np.sum(y_pred == y) / y.shape[0]
+        return score
 
     def _sigmoid(self, z):
         """
@@ -262,7 +271,7 @@ class LogisticRegression:
         Returns:
         result (array-like): Output of the sigmoid function.
         """
-        #--- Write your code here ---#
+        return 1 / (1 + np.exp(-z))
 
     def _cost_function(self, X, y):
         """
@@ -275,7 +284,12 @@ class LogisticRegression:
         Returns:
         cost (float): The logistic regression cost.
         """
-        #--- Write your code here ---#
+        y = y.flatten()
+        y_pred = self.predict(X)
+        n = X.shape[0]
+
+        cost = -1/n * (y.T @ np.log(y_pred) + (1 - y).T @ np.log(1 - y_pred))
+        return cost
     
 class NonLinearLogisticRegression:
     """
