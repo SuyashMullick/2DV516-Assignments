@@ -126,7 +126,6 @@ class RegressionModelNormalEquation(MachineLearningModel):
         
         score = np.mean((y_test - y_pred)**2)
         return score
-        
 
 class RegressionModelGradientDescent(MachineLearningModel):
     """
@@ -160,7 +159,12 @@ class RegressionModelGradientDescent(MachineLearningModel):
         """
         Xe_train = self._polynomial_features(X)
         y_train = y.flatten()
+        self.beta = np.zeros(Xe_train.shape[1])
+        n = Xe_train.shape[0]
         
+        for j in range(0, self.num_iterations):
+            gradient = Xe_train.T @ (Xe_train @ self.beta - y_train)
+            self.beta = self.beta - 2 * self.learning_rate / n * gradient
 
     def predict(self, X):
         """
@@ -172,7 +176,9 @@ class RegressionModelGradientDescent(MachineLearningModel):
         Returns:
         predictions (array-like): Predicted values.
         """
-        #--- Write your code here ---#
+        Xe_test = self._polynomial_features(X)
+        y_pred = Xe_test @ self.beta
+        return y_pred.flatten()
 
     def evaluate(self, X, y):
         """
@@ -185,7 +191,13 @@ class RegressionModelGradientDescent(MachineLearningModel):
         Returns:
         score (float): Evaluation score (MSE).
         """
-        #--- Write your code here ---#
+        Xe_test = self._polynomial_features(X)
+        y_test = y.flatten()
+        
+        y_pred = Xe_test @ self.beta
+        
+        score = np.mean((y_test - y_pred)**2)
+        return score
 
 class LogisticRegression:
     """
