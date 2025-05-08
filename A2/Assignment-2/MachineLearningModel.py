@@ -47,22 +47,31 @@ class MachineLearningModel(ABC):
         """
         pass
 
-def _polynomial_features(self, X):
-    """
-        Generate polynomial features from the input features.
-        Check the slides for hints on how to implement this one. 
-        This method is used by the regression models and works
-        for any degree polynomial. The returned value also contains
-        a column of 1's at the start to account for the bias term.
-        Parameters:
-        X (array-like): Features of the data.
+    def _polynomial_features(self, X):
+        """
+            Generate polynomial features from the input features.
+            Check the slides for hints on how to implement this one. 
+            This method is used by the regression models and works
+            for any degree polynomial. The returned value also contains
+            a column of 1's at the start to account for the bias term.
+            Parameters:
+            X (array-like): Features of the data.
 
-        Returns:
-        X_poly (array-like): Polynomial features (extended).
-    """
-    # May be completely wrong
-    X_poly = np.c_(*[X**i for i in range (0, self.degree+1)])
-    return X_poly
+            Returns:
+            X_poly (array-like): Polynomial features (extended).
+        """
+        # May be completely wrong
+        # X_poly = np.c_(*[X**i for i in range (0, self.degree+1)])
+        if X.ndim == 1:
+            X = X.reshape(-1, 1)
+
+        features = [np.ones(X.shape[0])]  # bias term
+
+        for deg in range(1, self.degree + 1):
+            features.extend([X[:, j]**deg for j in range(X.shape[1])])
+
+        X_poly = np.c_[*features]
+        return X_poly
 
 class RegressionModelNormalEquation(MachineLearningModel):
     """
