@@ -60,7 +60,8 @@ def _polynomial_features(self, X):
         Returns:
         X_poly (array-like): Polynomial features (extended).
     """
-    X_poly = np.c_([X**i for i in range (0, self.degree+1)])
+    # May be completely wrong
+    X_poly = np.c_(*[X**i for i in range (0, self.degree+1)])
     return X_poly
 
 class RegressionModelNormalEquation(MachineLearningModel):
@@ -92,6 +93,7 @@ class RegressionModelNormalEquation(MachineLearningModel):
         Xe = self._polynomial_features(X)
         y = y.flatten()
         
+        # May need handling for ininveritiblity (np.linalg.pinv)
         self.beta = np.linalg.inv(Xe.T @ Xe) @ Xe.T @ y
 
     def predict(self, X):
@@ -195,7 +197,7 @@ class RegressionModelGradientDescent(MachineLearningModel):
         score = np.mean((y - y_pred)**2)
         return score
 
-class LogisticRegression:
+class LogisticRegression(MachineLearningModel):
     """
     Logistic Regression model using gradient descent optimization.
     """
@@ -256,7 +258,7 @@ class LogisticRegression:
         score (float): Evaluation score (e.g., accuracy).
         """
         y = y.flatten()
-        y_pred = self.predict(X)
+        y_pred = (self.predict(X) >= 0.5).astype(int)
         
         score = np.sum(y_pred == y) / y.shape[0]
         return score
@@ -285,13 +287,13 @@ class LogisticRegression:
         cost (float): The logistic regression cost.
         """
         y = y.flatten()
-        y_pred = self.predict(X)
+        y_pred = np.clip(self.predict(X), 1e-15, 1 - 1e-15)
         n = X.shape[0]
 
         cost = -1/n * (y.T @ np.log(y_pred) + (1 - y).T @ np.log(1 - y_pred))
         return cost
     
-class NonLinearLogisticRegression:
+class NonLinearLogisticRegression(MachineLearningModel):
     """
     Nonlinear Logistic Regression model using gradient descent optimization.
     It works for 2 features (when creating the variable interactions)
@@ -306,7 +308,10 @@ class NonLinearLogisticRegression:
         learning_rate (float): The learning rate for gradient descent.
         num_iterations (int): The number of iterations for gradient descent.
         """
-        #--- Write your code here ---#
+        self.beta = None
+        self.degree = degree
+        self.learning_rate = learning_rate
+        self.num_iterations = num_iterations
 
     def fit(self, X, y):
         """
@@ -319,7 +324,14 @@ class NonLinearLogisticRegression:
         Returns:
         None
         """
-        #--- Write your code here ---#
+        X = self._mapFeature(X[:,0], X[:,1], self.degree)
+        y = y.flatten()
+        self.beta = np.zeros(X.shape[1])
+        n = X.shape[0]
+        
+        for j in range (0, self.num_iterations):
+            gradient = X.T @ (self._sigmoid(X @ self.beta) - y) / n
+            self.beta = self.beta - self.learning_rate * gradient
 
     def predict(self, X):
         """
@@ -331,7 +343,9 @@ class NonLinearLogisticRegression:
         Returns:
         predictions (array-like): Predicted probabilities.
         """
-        #--- Write your code here ---#
+        X = self._mapFeature(X[:,0], X[:,1], self.degree)
+        predictions = self._sigmoid(X @ self.beta)
+        return predictions.flatten()
 
     def evaluate(self, X, y):
         """
@@ -344,7 +358,11 @@ class NonLinearLogisticRegression:
         Returns:
         cost (float): The logistic regression cost.
         """
-        #--- Write your code here ---#
+        y = y.flatten()
+        y_pred = (self.predict(X) >= 0.5).astype(int)
+        
+        score = np.sum(y_pred == y) / y.shape[0]
+        return score
 
     def _sigmoid(self, z):
         """
@@ -356,9 +374,9 @@ class NonLinearLogisticRegression:
         Returns:
         result (array-like): Output of the sigmoid function.
         """
-        #--- Write your code here ---#
+        return 1 / (1 + np.exp(-z))
 
-    def mapFeature(self, X1, X2, D):
+    def _mapFeature(self, X1, X2, D):
         """
         Map the features to a higher-dimensional space using polynomial features.
         Check the slides to have hints on how to implement this function.
@@ -370,7 +388,13 @@ class NonLinearLogisticRegression:
         Returns:
         X_poly (array-like): Polynomial features.
         """
-        #--- Write your code here ---#
+        features = []
+        for i in range(D + 1):
+            for j in range(i+1):
+                feature = (X1**(i-j)) * (X2**j)
+                features.append(feature)
+        X_poly = np.c_(*features)
+        return X_poly
 
     def _cost_function(self, X, y):
         """
@@ -383,4 +407,9 @@ class NonLinearLogisticRegression:
         Returns:
         cost (float): The logistic regression cost.
         """
-        #--- Write your code here ---#
+        y = y.flatten()
+        y_pred = np.clip(self.predict(X), 1e-15, 1 - 1e-15)
+        n = X.shape[0]
+
+        cost = -1/n * (y.T @ np.log(y_pred) + (1 - y).T @ np.log(1 - y_pred))
+        return cost
